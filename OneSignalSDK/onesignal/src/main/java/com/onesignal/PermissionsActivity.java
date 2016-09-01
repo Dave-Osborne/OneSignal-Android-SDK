@@ -45,13 +45,23 @@ public class PermissionsActivity extends Activity {
    @Override
    protected void onCreate(Bundle savedInstanceState) {
       super.onCreate(savedInstanceState);
-      requestPermission();
+      // Android Activity lifecycle edge case:
+      //   This Activity code be created directly from Android due to the process being cold started
+      //   in this case OneSignal.init would not have been called yet.
+      // TODO: Test init called from onCreated of Application.
+      //          There wasn't an issue before this commit.
+      if (savedInstanceState != null && savedInstanceState.getBoolean("android:hasCurrentPermissionsRequest", false))
+         waiting = true;
+      else
+         requestPermission();
    }
 
    @Override
    protected void onNewIntent(Intent intent) {
       super.onNewIntent(intent);
-      requestPermission();
+
+      if (OneSignal.initDone)
+         requestPermission();
    }
 
    private void requestPermission() {
